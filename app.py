@@ -11,7 +11,7 @@ from plotcanvas import PlotWindow
 from plotdata import DataSeries,  DataItem,  PlotData
 
 
-logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 
 
 def run_model(chain,  timestep, runtime,  log):
