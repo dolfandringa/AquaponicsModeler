@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""This model contains the actual Qt app."""
+"""This module contains the actual Qt app."""
 from PyQt5 import QtWidgets,  QtCore
 from PyQt5.Qt import QRect
 import sys
-import interface
 import logging
-import model
-from plotcanvas import PlotWindow
-from plotdata import DataSeries,  DataItem,  PlotData
+from . import interface
+from . import model
+from .plotcanvas import PlotWindow
+from .plotdata import DataSeries,  DataItem,  PlotData
 
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
@@ -23,12 +23,13 @@ def run_model(chain,  timestep, runtime,  log):
             Minimum is 1 second, max is 3600s (1 hour)
         runtime (integer): The total time (hours) the model should run for.
             Minimum is 1 hour, maximum is 23 hours.
-        chain ([model.BaseModelClass]: The list containing the chain model,
-            which should contain objects inheriting from model.BaseModelClass.
-        The logger (logging.Logger): to use for debuglogging
+        chain (list): A list of :class:`model.BaseModelClass`) containing the
+            chain model, which should contain objects inheriting from
+            :class:`model.BaseModelClass`.
+        log (logging.Logger): The logger to use for logging.
 
     Returns:
-        [[float]]. A list with an item for the time series plus an item for
+        list: A list with an item for the time series plus an item for
             each model component in <chain>, with the data series for that
             component.
 
@@ -56,8 +57,10 @@ def get_parameter_widget(name,  type):
         type (tuple): A tuple with parameter information. The first item is
             always the the second is the label to display and subsequent items
             might be needed to create the widget.
+
     Returns:
-        [QtWidgets.QtWidget]: A list of all widgets for this parameter.
+        list: A list with :class:`QtWidgets.QtWidget` for all widgets for this
+            parameter.
 
     """
 
@@ -111,7 +114,7 @@ class AquaponicsModeler(QtWidgets.QMainWindow,  interface.Ui_MainWindow):
         msgbx = QtWidgets.QMessageBox()
         msgbx.setText(message)
         msgbx.setIcon(QtWidgets.QMessageBox.Critical)
-        msgbx.exec()
+        msgbx.exec_()
 
     def plotResults(self,  results,  chain):
         """Plot the results of a model run with matplotlib."""

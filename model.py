@@ -1,11 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-This model contains all components to be used in models.
+This module contains all components to be used in models.
 
-They should inherit from <BaseModelClass>.
+All model component classes should inherit from :class:`BaseModelClass`.
+So far there are two types of components: containers and pumps.
+
+:class:`Containers <Container>` are compents that contain water and have water
+flowing in or out. They need to have another component before them in the
+model, so water can flow from one container to the other.
+
+As :class:`Containers <Container>` always need a source of water, the first
+component in the model is a :class:`Pump`. There are several types of pumps,
+but they all assume an infinite water source that they can pump from, and they
+pump into a :class:`Container`.
 
 """
 import logging
+import collections
 import copy
 import sys
 sys.path.append("/home/dolf/Documents/Projects/Software ontwikkeling/")
@@ -25,9 +36,19 @@ class _PARAM_TYPES:
 
 class BaseModelClass(object):
 
-    """A base class for the model that other objects inherit from."""
+    """
+    A base class for the model that other objects inherit from.
 
-    _PARAMS = {}
+    The BaseModelClass doesn't implement much except for general methods to
+    get the parameters for a component and to manage the state while stepping
+    through the model. The state is the main variable manipulated by the model.
+    For :class:`Pump` it contains the on/off state, while for
+    :class:`Containers <Container>` it contains the water volume of the
+    container.
+
+    """
+
+    _PARAMS = collections.OrderedDict()
 
     def __init__(self):
         """Init the model instance."""
@@ -40,15 +61,20 @@ class BaseModelClass(object):
         """
         Get the current contents of this container.
 
-        Args:
-            returns: current state value
+        Returns:
+            float: current state value
 
         """
         return self.state
 
     @classmethod
     def getParameters(cls):
-        """Return the model parameters."""
+        """
+        Return the model parameters.
+
+        Returns:
+            collection.OrderedDict: The parameters for this class.
+        """
         log.debug('Getting parameters for class %s: %s' % (cls, cls._PARAMS))
         return cls._PARAMS
 
@@ -62,11 +88,12 @@ class Container(BaseModelClass):
     """
     A container in the aquaponics loop.
 
-    Each container is connected to a
-    previous container. The inflow speed of each container is determined by the
-    outflow speed of the previous container. The outflow of each container only
-    starts when in the treshold has been reached, and only if the contents of
-    the container > 0 liters.
+    Each container as a container/tank/basin/growbed/etc containing a volume
+    of water, with possibly water flowing out into the next component.
+    Each container is connected to a previous container. The inflow speed of
+    each container is determined by the outflow speed of the previous
+    container. The outflow of each container only starts when in the treshold
+    has been reached, and only if the contents of the container > 0 liters.
 
     """
 
@@ -98,8 +125,8 @@ class Container(BaseModelClass):
         """
         Determine the current flow speed of water from this container.
 
-        Args:
-            returns (int): The current outflow speed.
+        Returns:
+            float: The current outflow speed.
 
         """
         if self.state >= self.threshold:
@@ -113,8 +140,8 @@ class Container(BaseModelClass):
 
         This is determined by the outflow speed of the previous container.
 
-        Args:
-            returns (int): The current inflow speed.
+        Returns:
+            float: The current inflow speed.
 
         """
         return self.previous.get_current_outflow_speed()
@@ -135,9 +162,13 @@ class Container(BaseModelClass):
 class FloodDrainContainer(Container):
 
     """
-    This container will drain fully when the threshold has been reached.
+    This :class:`Container` will drain fully when the threshold has been reached.
 
-    This works for instance with a U-siphon or bell siphon design.
+    In other respects it works like other :class:`Containers <Container>` but
+    for the way it drains. A container with a U-siphon or bell siphon at the
+    end will only start draining when the waterlevel has reached a maximum.
+    When that happens, suction makes sure that all water is drained from the
+    container.
 
     """
 
@@ -190,7 +221,13 @@ class Pump(BaseModelClass):
         self.state = 1
 
     def get_current_outflow_speed(self):
-        """Return the pump speed of this pump."""
+        """
+        Return the pump speed of this pump.
+
+        Returns:
+            float: The outflow speed of this pump in L/min.
+
+        """
         return self.outflow
 
     def step(self, time=10):
@@ -240,8 +277,8 @@ class TimedPump(Pump):
 
         It is determined by a timed switch that toggles the pump on and off.
 
-        Args:
-            returns (float): The outflow speed in L/min
+        Returns:
+            float: The outflow speed in L/min
 
         """
         log.debug("state %i, time since switch %i, ontime %i, offtime %i" %
@@ -327,8 +364,8 @@ def get_components():
     """
     Get all available component types.
 
-    Args:
-        returns (list): Return a list of all component classes.
+    Returns:
+        list: Return a list of all component classes.
 
     """
     return [Container,  FloodDrainContainer,  Pump,  TimedPump,  Timed555Pump]

@@ -8,7 +8,4 @@ By creating your own chain of consecutive components, you can model how
 water flow between them in nice graphs.
 
 """
-import app
-import model
 
-__all__ = [app, model]
