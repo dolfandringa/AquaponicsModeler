@@ -9,7 +9,15 @@ Welcome to Aquaponics Modeler's documentation!
 .. toctree::
    :maxdepth: 2
 
+------------
+Installation
+------------
+First you need to make sure you have PyQt5 installed. Unfortunately it's impossible to have it installed
+as one of the regular dependencies, so you'll have to download it from https://www.riverbankcomputing.com/software/pyqt/download5.
+If possible, download and install the binary version as that is the easiest.
 
+Download the latest version of AquaponicsModeler from https://github.com/dolfandringa/AquaponicsModeler/archive/master.zip
+and then run `pip install master.zip`. This will install the application and all other dependencies.
 
 ------------------
 Building the model
