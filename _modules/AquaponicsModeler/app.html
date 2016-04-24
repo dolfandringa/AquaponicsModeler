@@ -1,0 +1,452 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>AquaponicsModeler.app &mdash; AquaponicsModeler 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="AquaponicsModeler 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for AquaponicsModeler.app</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This module contains the actual Qt app.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">PyQt5</span> <span class="kn">import</span> <span class="n">QtWidgets</span><span class="p">,</span>  <span class="n">QtCore</span>
+<span class="kn">from</span> <span class="nn">PyQt5.Qt</span> <span class="kn">import</span> <span class="n">QRect</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">interface</span>
+<span class="kn">import</span> <span class="nn">model</span>
+<span class="kn">from</span> <span class="nn">plotcanvas</span> <span class="kn">import</span> <span class="n">PlotWindow</span>
+<span class="kn">from</span> <span class="nn">plotdata</span> <span class="kn">import</span> <span class="n">DataSeries</span><span class="p">,</span>  <span class="n">DataItem</span><span class="p">,</span>  <span class="n">PlotData</span>
+
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="run_model"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.run_model">[docs]</a><span class="k">def</span> <span class="nf">run_model</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span>  <span class="n">timestep</span><span class="p">,</span> <span class="n">runtime</span><span class="p">,</span>  <span class="n">log</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Run the actual model and return the data series.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        timestep (int): The time steps (seconds) for the model</span>
+<span class="sd">            Minimum is 1 second, max is 3600s (1 hour)</span>
+<span class="sd">        runtime (int): The total time (hours) the model should run for</span>
+<span class="sd">            Minimum is 1 hour, maximum is 23 hours</span>
+<span class="sd">        chain (list): A list of model in the order they are</span>
+<span class="sd">            connected in the model. The componets should be instances of</span>
+<span class="sd">            classes inheriting from :class:`&lt;model.BaseModelCompontent&gt;`</span>
+<span class="sd">        log (logging.Logger): The logger to use for logging</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A list with an item for the time axis plus an item for</span>
+<span class="sd">            each model component in chain, with the data series for that</span>
+<span class="sd">            component.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">runtime</span> <span class="o">=</span> <span class="n">runtime</span> <span class="o">*</span> <span class="mi">3600</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">]</span>
+    <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+
+    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">runtime</span><span class="p">,</span> <span class="n">timestep</span><span class="p">):</span>
+        <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Stepping to time </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">t</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+            <span class="n">results</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="o">.</span><span class="n">get_state</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">timestep</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">results</span></div>
+
+
+<div class="viewcode-block" id="get_parameter_widget"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.get_parameter_widget">[docs]</a><span class="k">def</span> <span class="nf">get_parameter_widget</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Map a tuple with model parameter type information into a QtWidget set.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name (str): The name of the parameter</span>
+<span class="sd">        type (tuple): A tuple with parameter information. The first item is</span>
+<span class="sd">            always the the second is the label to display and subsequent items</span>
+<span class="sd">            might be needed to create the widget</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: A list with :class:`QtWidgets.QtWidget` for all widgets for</span>
+<span class="sd">        this parameter.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">model</span><span class="o">.</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">MODEL</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">model</span><span class="o">.</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">INTEGER</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">()</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">type</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s1">&#39;lab_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QSpinBox</span><span class="p">()</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">99999</span><span class="p">)</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s1">&#39;w_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">setBuddy</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">label</span><span class="p">,</span>  <span class="n">widget</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">model</span><span class="o">.</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">()</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">type</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s1">&#39;lab_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDoubleSpinBox</span><span class="p">()</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setMaximum</span><span class="p">(</span><span class="mi">99999</span><span class="p">)</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s1">&#39;w_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">setBuddy</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">label</span><span class="p">,</span>  <span class="n">widget</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">model</span><span class="o">.</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">TEXT</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLabel</span><span class="p">()</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="nb">type</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s1">&#39;lab_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">widget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QLineEdit</span><span class="p">()</span>
+        <span class="n">widget</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s1">&#39;w_</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">label</span><span class="o">.</span><span class="n">setBuddy</span><span class="p">(</span><span class="n">widget</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">label</span><span class="p">,</span>  <span class="n">widget</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="AquaponicsModeler"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.AquaponicsModeler">[docs]</a><span class="k">class</span> <span class="nc">AquaponicsModeler</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMainWindow</span><span class="p">,</span>  <span class="n">interface</span><span class="o">.</span><span class="n">Ui_MainWindow</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;The graphical interface to the aquaponics modeler.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log</span><span class="p">,</span>   <span class="n">parent</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiate the application.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            log (logging.Logger): The logger to send log messages to.</span>
+<span class="sd">            parent (PyQt5.Qt.QWidget): The parent widget.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AquaponicsModeler</span><span class="p">,</span>  <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span> <span class="o">=</span> <span class="n">log</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setupUi</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bt_add_row</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">addRow</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bt_del_row</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deleteSelectedRows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">btn_run</span><span class="o">.</span><span class="n">clicked</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">runModel</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotWindow</span> <span class="o">=</span> <span class="n">PlotWindow</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotWindow</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="n">QRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">600</span><span class="p">,</span> <span class="mi">400</span><span class="p">))</span>
+
+<div class="viewcode-block" id="AquaponicsModeler.showErrorMessage"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.AquaponicsModeler.showErrorMessage">[docs]</a>    <span class="k">def</span> <span class="nf">showErrorMessage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">message</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Popup a message box with an error message.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            message (str): The message to display.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">msgbx</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">()</span>
+        <span class="n">msgbx</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="n">msgbx</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Critical</span><span class="p">)</span>
+        <span class="n">msgbx</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AquaponicsModeler.plotResults"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.AquaponicsModeler.plotResults">[docs]</a>    <span class="k">def</span> <span class="nf">plotResults</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">results</span><span class="p">,</span>  <span class="n">chain</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the results of a model run with matplotlib.</span>
+
+<span class="sd">            results (list): A list of lists. The first item is the x-axis</span>
+<span class="sd">                (time component). Subsequent items are series for each model</span>
+<span class="sd">                component in the order in which they are in the chain. Each of</span>
+<span class="sd">                these lists contains the state values of the component for each</span>
+<span class="sd">                step through the model.</span>
+<span class="sd">            chain (list): The model chain, which is a list of instances</span>
+<span class="sd">                inheriting from :class:`model.BaseModelClass`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="o">/</span> <span class="mi">60</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">pumpSeries</span> <span class="o">=</span> <span class="n">DataSeries</span><span class="p">(</span><span class="n">x_title</span><span class="o">=</span><span class="s1">&#39;Time (min)&#39;</span><span class="p">,</span>
+                                <span class="n">y_title</span><span class="o">=</span><span class="s1">&#39;State (on/off)&#39;</span><span class="p">,</span>
+                                <span class="n">x_values</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dataItems</span><span class="o">=</span><span class="p">[])</span>
+        <span class="n">containerSeries</span> <span class="o">=</span> <span class="n">DataSeries</span><span class="p">(</span><span class="n">x_title</span><span class="o">=</span><span class="s1">&#39;Time (min)&#39;</span><span class="p">,</span>
+                                     <span class="n">y_title</span><span class="o">=</span><span class="s1">&#39;Contents (L)&#39;</span><span class="p">,</span>
+                                     <span class="n">x_values</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">dataItems</span><span class="o">=</span><span class="p">[])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Got </span><span class="si">%i</span><span class="s2"> items for time axis&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+
+        <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">getParameters</span><span class="p">()</span>
+            <span class="n">paramValues</span> <span class="o">=</span> <span class="p">[(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">k</span><span class="p">)))</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+            <span class="n">num</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+            <span class="k">while</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+                <span class="n">num</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">num</span><span class="p">)</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">DataItem</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                            <span class="n">values</span><span class="o">=</span><span class="n">results</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span>
+                            <span class="n">params</span><span class="o">=</span><span class="n">paramValues</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">Pump</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Adding a series with </span><span class="si">%i</span><span class="s1"> items to pumpSeries.&#39;</span>
+                               <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">values</span><span class="p">))</span>
+                <span class="n">pumpSeries</span><span class="o">.</span><span class="n">dataItems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">Container</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Adding a series with </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">values</span><span class="p">)</span> <span class="o">+</span>
+                               <span class="s1">&#39; items to containerSeries.&#39;</span><span class="p">)</span>
+                <span class="n">containerSeries</span><span class="o">.</span><span class="n">dataItems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+            <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">desc</span> <span class="o">=</span> <span class="s2">&quot;Model components: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">i</span><span class="o">.</span><span class="n">title</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span><span class="p">])</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">PlotData</span><span class="p">(</span><span class="n">dataSeries</span><span class="o">=</span><span class="p">[</span><span class="n">containerSeries</span><span class="p">,</span> <span class="n">pumpSeries</span><span class="p">],</span>
+                        <span class="n">description</span><span class="o">=</span><span class="n">desc</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotWindow</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotWindow</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AquaponicsModeler.runModel"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.AquaponicsModeler.runModel">[docs]</a>    <span class="k">def</span> <span class="nf">runModel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run the actual model.&quot;&quot;&quot;</span>
+        <span class="n">chain</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelLayout</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelLayout</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span>
+            <span class="n">typewidget</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span>
+            <span class="n">componentType</span> <span class="o">=</span> <span class="n">typewidget</span><span class="o">.</span><span class="n">itemData</span><span class="p">(</span><span class="n">typewidget</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">componentType</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">showErrorMessage</span><span class="p">(</span><span class="s2">&quot;The component in row </span><span class="si">%i</span><span class="s2"> doesn&#39;t have &quot;</span> <span class="o">+</span>
+                                      <span class="s2">&quot;a type yet. Please select one.&quot;</span> <span class="o">%</span>
+                                      <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="k">return</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Component </span><span class="si">%i</span><span class="s1"> is of type </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
+                           <span class="p">(</span><span class="n">i</span><span class="p">,</span>  <span class="n">componentType</span><span class="o">.</span><span class="n">__name__</span><span class="p">))</span>
+
+            <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">params</span> <span class="o">=</span> <span class="n">componentType</span><span class="o">.</span><span class="n">getParameters</span><span class="p">()</span>
+            <span class="k">if</span> <span class="s1">&#39;previous&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">showErrorMessage</span><span class="p">(</span><span class="s2">&quot;The </span><span class="si">%s</span><span class="s2"> component at row </span><span class="si">%i</span><span class="s2"> can&#39;t be&quot;</span>
+                                          <span class="s2">&quot;the first component. It needs a &quot;</span>
+                                          <span class="s2">&quot;source of water. Try adding a pump.&quot;</span>
+                                          <span class="o">%</span> <span class="p">(</span><span class="n">componentType</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span>  <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+                    <span class="k">return</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">values</span><span class="p">[</span><span class="s1">&#39;previous&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">row</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+                <span class="n">w</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">j</span><span class="p">)</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">objectName</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Checking widget </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">name</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">name</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;w_&#39;</span><span class="p">:</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="s1">&#39;value&#39;</span><span class="p">):</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+                    <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">w</span><span class="p">,</span>  <span class="s1">&#39;text&#39;</span><span class="p">):</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to fetch value for widget </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span>
+                                       <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span>  <span class="n">w</span><span class="p">))</span>
+                        <span class="n">v</span> <span class="o">=</span> <span class="bp">None</span>
+                    <span class="n">values</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got parameter values </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">values</span><span class="p">)</span>
+            <span class="n">component</span> <span class="o">=</span> <span class="n">componentType</span><span class="p">(</span><span class="o">**</span><span class="n">values</span><span class="p">)</span>
+            <span class="n">chain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">component</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">showErrorMessage</span><span class="p">(</span><span class="s2">&quot;No model components have been defined &quot;</span>
+                                      <span class="s2">&quot;yet. Please add rows.&quot;</span><span class="p">)</span>
+                <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got chain </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">chain</span><span class="p">)</span>
+        <span class="n">timestep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp_timestep</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="n">runtime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp_runtime</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got timestep </span><span class="si">%i</span><span class="s1"> and runtime </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">timestep</span><span class="p">,</span> <span class="n">runtime</span><span class="p">))</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">run_model</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span>  <span class="n">timestep</span><span class="p">,</span>  <span class="n">runtime</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotResults</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">chain</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AquaponicsModeler.addRow"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.AquaponicsModeler.addRow">[docs]</a>    <span class="k">def</span> <span class="nf">addRow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add a row to the list of components.&quot;&quot;&quot;</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelLayout</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>  <span class="c1"># The number of rows already there</span>
+
+        <span class="sd">&quot;&quot;&quot;The initial widgets (dropbox for component type and checkbox</span>
+<span class="sd">        to select the row&quot;&quot;&quot;</span>
+        <span class="n">checkbox</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">()</span>
+        <span class="n">typebox</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QComboBox</span><span class="p">()</span>
+        <span class="n">typebox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="s2">&quot;-- choose a component--&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">typebox</span><span class="o">.</span><span class="n">currentIndexChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updateModelComponent</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">get_components</span><span class="p">()):</span>
+            <span class="n">typebox</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span>
+
+        <span class="c1">#  The frame widget and layout holding this row.</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modelFrame</span><span class="p">)</span>
+        <span class="n">frame</span><span class="o">.</span><span class="n">setFrameShape</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFrame</span><span class="o">.</span><span class="n">StyledPanel</span><span class="p">)</span>
+        <span class="n">frame</span><span class="o">.</span><span class="n">setFrameShadow</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFrame</span><span class="o">.</span><span class="n">Raised</span><span class="p">)</span>
+        <span class="n">frame</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s2">&quot;componentFrame</span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">count</span><span class="p">)</span>
+        <span class="n">modelComponent</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QHBoxLayout</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+        <span class="n">modelComponent</span><span class="o">.</span><span class="n">setAlignment</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">AlignLeft</span><span class="p">)</span>
+        <span class="n">modelComponent</span><span class="o">.</span><span class="n">setObjectName</span><span class="p">(</span><span class="s2">&quot;modelComponent</span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">count</span><span class="p">)</span>
+
+        <span class="c1">#  Add the component widgets to the frame</span>
+        <span class="n">modelComponent</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">checkbox</span><span class="p">)</span>
+        <span class="n">modelComponent</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">typebox</span><span class="p">)</span>
+        <span class="c1">#  Add the frame to the application</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">modelLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AquaponicsModeler.updateModelComponent"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.AquaponicsModeler.updateModelComponent">[docs]</a>    <span class="k">def</span> <span class="nf">updateModelComponent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Action to perform when the component type dropbox changes.</span>
+
+<span class="sd">        It removes all parameter widgets for the respective row and adds the</span>
+<span class="sd">        parameter widgets for the new component type.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">sender</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sender</span><span class="p">()</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">parent</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span>
+        <span class="n">index</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">indexOf</span><span class="p">(</span><span class="n">sender</span><span class="p">)</span>
+        <span class="n">rem_items</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>  <span class="n">layout</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+            <span class="sd">&quot;&quot;&quot;First loop over the widgets before removing them as the index</span>
+<span class="sd">            will change once removed.&quot;&quot;&quot;</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;item at at </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span>  <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">()))</span>
+            <span class="n">rem_items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rem_items</span><span class="p">:</span>
+            <span class="c1"># Now remove the items.</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="n">widget</span> <span class="o">=</span> <span class="n">i</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span>
+            <span class="n">widget</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+
+        <span class="c1">#  get the component type</span>
+        <span class="n">component</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">itemData</span><span class="p">(</span><span class="n">sender</span><span class="o">.</span><span class="n">currentIndex</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Changed model component to </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">component</span><span class="p">)</span>
+        <span class="c1">#  get the model parameters for the type</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">component</span><span class="o">.</span><span class="n">getParameters</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1">#  add all parameters to the layout</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s1">&#39;previous&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">get_parameter_widget</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
+                    <span class="n">layout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="n">w</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;adding widget </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="AquaponicsModeler.deleteSelectedRows"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.AquaponicsModeler.deleteSelectedRows">[docs]</a>    <span class="k">def</span> <span class="nf">deleteSelectedRows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Action to perform when the remove row button is clicked.</span>
+
+<span class="sd">        All component rows for which the checkbox was clicked are removed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">modelLayout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Number of component rows: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">layout</span><span class="o">.</span><span class="n">count</span><span class="p">()))</span>
+        <span class="n">remove_rows</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">layout</span><span class="o">.</span><span class="n">count</span><span class="p">()):</span>
+            <span class="n">row_item</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">row_item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;Widget at row </span><span class="si">%s</span><span class="s1"> is of type None&#39;</span> <span class="o">%</span> <span class="n">r</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="n">row_item</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Item at row </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span>  <span class="n">row</span><span class="p">))</span>
+            <span class="n">componentLayout</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">layout</span><span class="p">()</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">componentLayout</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Widget at row </span><span class="si">%s</span><span class="s1"> and position 0 is None&#39;</span> <span class="o">%</span> <span class="n">r</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="n">widget</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Widget at row </span><span class="si">%s</span><span class="s1"> and position 0: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
+                           <span class="p">(</span><span class="n">r</span><span class="p">,</span>  <span class="n">widget</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">widget</span><span class="p">,</span>  <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QCheckBox</span><span class="p">)</span> <span class="ow">and</span> <span class="n">widget</span><span class="o">.</span><span class="n">isChecked</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Removing widgets for row </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">r</span><span class="p">)</span>
+                <span class="n">remove_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row_item</span><span class="p">)</span>
+                <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">componentLayout</span><span class="o">.</span><span class="n">itemAt</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">componentLayout</span><span class="o">.</span><span class="n">count</span><span class="p">())]</span>
+                <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">items</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;item at at </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span>
+                                   <span class="p">(</span><span class="n">r</span><span class="p">,</span>  <span class="n">c</span><span class="p">,</span>  <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">()))</span>
+                    <span class="n">componentLayout</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                    <span class="n">widget</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span>
+                    <span class="n">widget</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Leaving row </span><span class="si">%s</span><span class="s1"> alone&#39;</span> <span class="o">%</span> <span class="n">r</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">remove_rows</span><span class="p">:</span>
+            <span class="sd">&quot;&quot;&quot;Remove the actual rows (Frames that used to contain the widgets</span>
+<span class="sd">            for the component)&quot;&quot;&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Removing row </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">row</span><span class="o">.</span><span class="n">widget</span><span class="p">())</span>
+            <span class="n">layout</span><span class="o">.</span><span class="n">removeItem</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="n">row</span><span class="o">.</span><span class="n">widget</span><span class="p">()</span><span class="o">.</span><span class="n">deleteLater</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Rows remaning: </span><span class="si">%i</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">layout</span><span class="o">.</span><span class="n">count</span><span class="p">())</span></div></div>
+
+
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.app.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Run the actual application.&quot;&quot;&quot;</span>
+    <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;aquaponics.interface&quot;</span><span class="p">)</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+    <span class="n">form</span> <span class="o">=</span> <span class="n">AquaponicsModeler</span><span class="p">(</span><span class="n">log</span><span class="p">)</span>
+    <span class="n">form</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span></div>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;AquaponicsModeler&#39;</span><span class="p">,</span> <span class="s1">&#39;run_model&#39;</span><span class="p">,</span> <span class="s1">&#39;get_parameter_widget&#39;</span><span class="p">,</span> <span class="s1">&#39;main&#39;</span><span class="p">]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Dolf Andringa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

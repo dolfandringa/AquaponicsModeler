@@ -1,0 +1,459 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>AquaponicsModeler.model &mdash; AquaponicsModeler 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="AquaponicsModeler 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for AquaponicsModeler.model</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The :mod:`AquaponicsModeler.model` module contains all components to be used in</span>
+<span class="sd">models.</span>
+
+<span class="sd">All model components are classes that should inherit from</span>
+<span class="sd">:class:`BaseModelClass`. So far there are two groups of component types:</span>
+<span class="sd">containers and pumps.</span>
+
+<span class="sd">:class:`Containers &lt;Container&gt;` are compents that contain water and have water</span>
+<span class="sd">flowing in or out. They need to have another component before them in the</span>
+<span class="sd">model, so water can flow from one container to the other.</span>
+
+<span class="sd">As :class:`Containers &lt;Container&gt;` always need a source of water, the first</span>
+<span class="sd">component in the model is a :class:`Pump`. There are several types of pumps,</span>
+<span class="sd">but they all assume an infinite water source that they can pump from, and they</span>
+<span class="sd">pump into a :class:`Container`.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">PyElectronics.timers</span> <span class="kn">import</span> <span class="n">AStable555</span>
+<span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;aquaponics.model&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_PARAM_TYPES</span><span class="p">:</span>
+
+    <span class="sd">&quot;&quot;&quot;Constant holding the different parameter types.&quot;&quot;&quot;</span>
+
+    <span class="n">MODEL</span> <span class="o">=</span> <span class="s1">&#39;Model Component Parameter&#39;</span>
+    <span class="n">INTEGER</span> <span class="o">=</span> <span class="s1">&#39;Integer Parameter&#39;</span>
+    <span class="n">FLOAT</span> <span class="o">=</span> <span class="s1">&#39;Float Parameter&#39;</span>
+    <span class="n">TEXT</span> <span class="o">=</span> <span class="s1">&#39;Text Parameter&#39;</span>
+
+
+<div class="viewcode-block" id="BaseModelClass"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.BaseModelClass">[docs]</a><span class="k">class</span> <span class="nc">BaseModelClass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A base class for the model that other objects inherit from.</span>
+
+<span class="sd">    The BaseModelClass doesn&#39;t implement much except for general methods to</span>
+<span class="sd">    get the parameters for a component and to manage the state while stepping</span>
+<span class="sd">    through the model. The state is the main variable manipulated by the model.</span>
+<span class="sd">    For :class:`Pump` it contains the on/off state, while for</span>
+<span class="sd">    :class:`Containers &lt;Container&gt;` it contains the water volume of the</span>
+<span class="sd">    container.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_PARAMS</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span>
+
+<div class="viewcode-block" id="BaseModelClass.get_state"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.BaseModelClass.get_state">[docs]</a>    <span class="k">def</span> <span class="nf">get_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the current contents of this container.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: current state value</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseModelClass.getParameters"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.BaseModelClass.getParameters">[docs]</a>    <span class="k">def</span> <span class="nf">getParameters</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the model parameters.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            collections.OrderedDict: The parameters for this class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Getting parameters for class </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">_PARAMS</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_PARAMS</span></div>
+
+<div class="viewcode-block" id="BaseModelClass.step"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.BaseModelClass.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Step into the next iteration of the model.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Please implement a step instance method&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Container"><a class="viewcode-back" href="../../index.html#AquaponicsModeler.model.Container">[docs]</a><span class="k">class</span> <span class="nc">Container</span><span class="p">(</span><span class="n">BaseModelClass</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A container in the aquaponics loop.</span>
+
+<span class="sd">    Each container is a container/tank/basin/growbed/etc containing a volume</span>
+<span class="sd">    of water, with possibly water flowing out into the next component and</span>
+<span class="sd">    flowing into it from the previous container in the loop.</span>
+<span class="sd">    The inflow speed of each container is determined by the outflow speed of</span>
+<span class="sd">    the previous container. The outflow of each container only starts when in</span>
+<span class="sd">    the treshold has been reached, and only if the contents of the</span>
+<span class="sd">    container &gt; 0 liters.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;previous&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">MODEL</span><span class="p">,</span> <span class="s1">&#39;previous&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;outflow&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="s1">&#39;outflow (l/min)&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;threshold&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">INTEGER</span><span class="p">,</span>  <span class="s1">&#39;dump threshold (l)&#39;</span><span class="p">),</span>
+        <span class="s1">&#39;start_content&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">INTEGER</span><span class="p">,</span> <span class="s1">&#39;start content (l)&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">previous</span><span class="p">,</span> <span class="n">outflow</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">start_content</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            previous (Container): The previous Container in the chain.</span>
+<span class="sd">            outflow (float): The outflow speed of this container.</span>
+<span class="sd">            threshold (int): The threshold contents after which the container</span>
+<span class="sd">                outflow speed starts.</span>
+<span class="sd">            start_content (int): The starting contents of the container.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previous</span> <span class="o">=</span> <span class="n">previous</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outflow</span> <span class="o">=</span> <span class="n">outflow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_content</span> <span class="o">=</span> <span class="n">start_content</span>
+
+<div class="viewcode-block" id="Container.get_current_outflow_speed"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.Container.get_current_outflow_speed">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_outflow_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine the current flow speed of water from this container.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The current outflow speed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">outflow</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="Container.get_current_inflow_speed"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.Container.get_current_inflow_speed">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_inflow_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Determine the current speed of water flowing into this container.</span>
+
+<span class="sd">        This is determined by the outflow speed of the previous container.</span>
+
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The current inflow speed.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">previous</span><span class="o">.</span><span class="n">get_current_outflow_speed</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Container.step"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.Container.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Go through the next step of the simulation of this container.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            time (int): The length of the next step in seconds.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_current_inflow_speed</span><span class="p">()</span>
+        <span class="n">outflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_current_outflow_speed</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">+=</span> <span class="n">time</span> <span class="o">/</span> <span class="mi">60</span> <span class="o">*</span> <span class="n">inflow</span> <span class="o">-</span> <span class="n">time</span> <span class="o">/</span> <span class="mi">60</span> <span class="o">*</span> <span class="n">outflow</span></div></div>
+
+
+<div class="viewcode-block" id="FloodDrainContainer"><a class="viewcode-back" href="../../index.html#AquaponicsModeler.model.FloodDrainContainer">[docs]</a><span class="k">class</span> <span class="nc">FloodDrainContainer</span><span class="p">(</span><span class="n">Container</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This :class:`Container` will drain fully when the threshold has been</span>
+<span class="sd">    reached.</span>
+
+<span class="sd">    In other respects it works like other :class:`Containers &lt;Container&gt;` but</span>
+<span class="sd">    for the way it drains. A container with a U-siphon or bell siphon at the</span>
+<span class="sd">    end will only start draining when the waterlevel has reached a maximum.</span>
+<span class="sd">    When that happens, suction makes sure that all water is drained from the</span>
+<span class="sd">    container at the speed specified in outflow.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">FloodDrainContainer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flooding</span> <span class="o">=</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="FloodDrainContainer.get_current_outflow_speed"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.FloodDrainContainer.get_current_outflow_speed">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_outflow_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the current outlflow speed.</span>
+
+<span class="sd">        Outflow starts when self.threshold has been reached and will continue</span>
+<span class="sd">        at self.outflow speed until the container is empty.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The outflow speed of this :class:`Container`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flooding</span> <span class="ow">is</span> <span class="bp">True</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>\
+                <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flooding</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">outflow</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">flooding</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">return</span> <span class="mi">0</span></div></div>
+
+
+<div class="viewcode-block" id="Pump"><a class="viewcode-back" href="../../index.html#AquaponicsModeler.model.Pump">[docs]</a><span class="k">class</span> <span class="nc">Pump</span><span class="p">(</span><span class="n">BaseModelClass</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A general Pump object.</span>
+
+<span class="sd">    It pumps water into the system (from an unlimited source) and has a</span>
+<span class="sd">    constant outflow speed. It doesn&#39;t have contents (unlike containers for</span>
+<span class="sd">    instance). The state attribute contains the on (1) or off (0) state</span>
+<span class="sd">    of the pump, which is also what is plotted in the resulting graphs.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_PARAMS</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;outflow&#39;</span><span class="p">:</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="s1">&#39;outflow (l/min)&#39;</span><span class="p">),</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outflow</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            outflow (float): The speed at which the pump pumps.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outflow</span> <span class="o">=</span> <span class="n">outflow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="Pump.get_current_outflow_speed"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.Pump.get_current_outflow_speed">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_outflow_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the pump speed of this pump.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The outflow speed of this pump in L/min.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">outflow</span></div>
+
+<div class="viewcode-block" id="Pump.step"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.Pump.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Go through the next step of the pump state and return that state.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            time (int): The time in seconds for which the pump state should be</span>
+<span class="sd">                returned.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The state of the pump. 1=on 0=off.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span></div></div>
+
+
+<div class="viewcode-block" id="TimedPump"><a class="viewcode-back" href="../../index.html#AquaponicsModeler.model.TimedPump">[docs]</a><span class="k">class</span> <span class="nc">TimedPump</span><span class="p">(</span><span class="n">Pump</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pump like the Pump object.</span>
+
+<span class="sd">    This pump has timing parameters which periodically switch it on and off.</span>
+<span class="sd">    This way the outflow speed of the pump is controlled. If it is on, it</span>
+<span class="sd">    equals the outflow speed parameter, else it is 0.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_PARAMS</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">Pump</span><span class="o">.</span><span class="n">_PARAMS</span><span class="p">)</span>
+    <span class="n">_PARAMS</span><span class="p">[</span><span class="s1">&#39;ontime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="s1">&#39;on time (min)&#39;</span><span class="p">)</span>
+    <span class="n">_PARAMS</span><span class="p">[</span><span class="s1">&#39;offtime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="s1">&#39;off time (min)&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ontime</span><span class="p">,</span> <span class="n">offtime</span><span class="p">,</span> <span class="n">outflow</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            ontime (float): The time in minutes the pump spends pumping.</span>
+<span class="sd">            offtime (float): The time in minutes the pump is off.</span>
+<span class="sd">            outflow (float): The speed at which the pump pumps in L/min.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ontime</span> <span class="o">=</span> <span class="n">ontime</span> <span class="o">*</span> <span class="mi">60</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offtime</span> <span class="o">=</span> <span class="n">offtime</span> <span class="o">*</span> <span class="mi">60</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outflow</span> <span class="o">=</span> <span class="n">outflow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="TimedPump.get_current_outflow_speed"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.TimedPump.get_current_outflow_speed">[docs]</a>    <span class="k">def</span> <span class="nf">get_current_outflow_speed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the current outflow (pump) speed.</span>
+
+<span class="sd">        It is determined by a timed switch that toggles the pump on and off.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: The outflow speed in L/min</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;state </span><span class="si">%i</span><span class="s2">, time since switch </span><span class="si">%i</span><span class="s2">, ontime </span><span class="si">%i</span><span class="s2">, offtime </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ontime</span><span class="p">,</span>
+                   <span class="bp">self</span><span class="o">.</span><span class="n">offtime</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">ontime</span><span class="p">:</span>
+            <span class="n">outflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outflow</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offtime</span><span class="p">:</span>
+            <span class="n">outflow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">outflow</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">offtime</span><span class="p">:</span>
+            <span class="n">outflow</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ontime</span><span class="p">:</span>
+            <span class="n">outflow</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Returning outflow </span><span class="si">%0.2f</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">outflow</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">outflow</span></div>
+
+<div class="viewcode-block" id="TimedPump.step"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.TimedPump.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Go through the next step of the pump state and return that state.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            time (int): The time in seconds for which the pump state should be</span>
+<span class="sd">                returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">offtime</span><span class="p">)</span> <span class="ow">or</span>\
+                <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ontime</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Switching pump state to </span><span class="si">%i</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">^</span> <span class="mi">1</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">^</span> <span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Keeping pump state at </span><span class="si">%i</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">+=</span> <span class="n">time</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Pump at state </span><span class="si">%i</span><span class="s2"> for </span><span class="si">%i</span><span class="s2"> sec&quot;</span> <span class="o">%</span>
+                  <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="Timed555Pump"><a class="viewcode-back" href="../../index.html#AquaponicsModeler.model.Timed555Pump">[docs]</a><span class="k">class</span> <span class="nc">Timed555Pump</span><span class="p">(</span><span class="n">TimedPump</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pump like the :class:`TimedPump` object.</span>
+
+<span class="sd">    This pump gets resistor and capacitor values as input parameters instead of</span>
+<span class="sd">    the actual ontime and offtime. This object assumes a 555 timer circtui in</span>
+<span class="sd">    a-stable mode is used to switch the pump on and off.</span>
+<span class="sd">    The resistor values of the timer determine the on and off time.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_PARAMS</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">Pump</span><span class="o">.</span><span class="n">_PARAMS</span><span class="p">)</span>
+    <span class="n">_PARAMS</span><span class="p">[</span><span class="s1">&#39;r1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="s1">&#39;Resistor 1 value (Ohm)&#39;</span><span class="p">)</span>
+    <span class="n">_PARAMS</span><span class="p">[</span><span class="s1">&#39;r2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">FLOAT</span><span class="p">,</span> <span class="s1">&#39;Resistor 2 value (Ohm)&#39;</span><span class="p">)</span>
+    <span class="n">_PARAMS</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">_PARAM_TYPES</span><span class="o">.</span><span class="n">INTEGER</span><span class="p">,</span> <span class="s1">&#39;The capacitor value (uF)&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">outflow</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            r1 (int): The value in Ohm of resistor 1 for the 555 timer.</span>
+<span class="sd">            r2 (int): The value in Ohm of resistor 2 for the 555 timer.</span>
+<span class="sd">            c (int): The value of the capacitor in uF for the 555 timer</span>
+<span class="sd">            outflow (float): The speed at which the pump pumps in L/min.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="n">c</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r1</span> <span class="o">=</span> <span class="n">r1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">r2</span> <span class="o">=</span> <span class="n">r2</span>
+        <span class="n">ontime</span> <span class="o">=</span> <span class="n">AStable555</span><span class="o">.</span><span class="n">timeLow</span><span class="p">(</span><span class="n">r2</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+        <span class="n">offtime</span> <span class="o">=</span> <span class="n">AStable555</span><span class="o">.</span><span class="n">timeHigh</span><span class="p">(</span><span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Got ontime </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">ontime</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Got offtime </span><span class="si">%i</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">offtime</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ontime</span> <span class="o">=</span> <span class="n">ontime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">offtime</span> <span class="o">=</span> <span class="n">offtime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">outflow</span> <span class="o">=</span> <span class="n">outflow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_since_switch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="get_components"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.model.get_components">[docs]</a><span class="k">def</span> <span class="nf">get_components</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get all available component types.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        list: Return a list of all component classes.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">Container</span><span class="p">,</span>  <span class="n">FloodDrainContainer</span><span class="p">,</span>  <span class="n">Pump</span><span class="p">,</span>  <span class="n">TimedPump</span><span class="p">,</span>  <span class="n">Timed555Pump</span><span class="p">]</span></div>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;BaseModelClass&#39;</span><span class="p">,</span> <span class="s1">&#39;Container&#39;</span><span class="p">,</span> <span class="s1">&#39;FloodDrainContainer&#39;</span><span class="p">,</span> <span class="s1">&#39;Pump&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;TimedPump&#39;</span><span class="p">,</span> <span class="s1">&#39;Timed555Pump&#39;</span><span class="p">,</span> <span class="s1">&#39;get_components&#39;</span><span class="p">,</span> <span class="s1">&#39;_PARAM_TYPES&#39;</span><span class="p">]</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Dolf Andringa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

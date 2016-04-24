@@ -1,0 +1,152 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>AquaponicsModeler.plotdata &mdash; AquaponicsModeler 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="AquaponicsModeler 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for AquaponicsModeler.plotdata</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This module contais classes to package the model data necessary for plotting.</span>
+
+<span class="sd">DataSeries is the main class of interest.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="DataItem"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.plotdata.DataItem">[docs]</a><span class="k">class</span> <span class="nc">DataItem</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;One line in a plot. It contains y-axis values and a title.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">title</span><span class="p">,</span>  <span class="n">values</span><span class="p">,</span>  <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Init the DataItem.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            title (string): The title to be used in the legend.</span>
+<span class="sd">            values (list): A list of y-axis values to for this line.</span>
+<span class="sd">            params (list): A list of model parameters containing (title, value)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">values</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="n">params</span></div>
+
+
+<div class="viewcode-block" id="DataSeries"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.plotdata.DataSeries">[docs]</a><span class="k">class</span> <span class="nc">DataSeries</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DataSeries contains series of data to plot in a single plot.</span>
+
+<span class="sd">    The y-axis and x-axis scales should be identical for each dataItem.</span>
+<span class="sd">    Each dataItem is represented by a line in the plot and legend.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x_title</span><span class="p">,</span>  <span class="n">y_title</span><span class="p">,</span>  <span class="n">x_values</span><span class="p">,</span> <span class="n">dataItems</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Init the Data Series.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            x_title (string): The title for the x-axis</span>
+<span class="sd">            y_title (string): The title for the y-axis</span>
+<span class="sd">            x_values (list): A list of values for the x-axis.</span>
+<span class="sd">            dataItems (list): A list of DataItem objects, one for each line.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataItems</span> <span class="o">=</span> <span class="n">dataItems</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_title</span> <span class="o">=</span> <span class="n">y_title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_title</span> <span class="o">=</span> <span class="n">x_title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_values</span> <span class="o">=</span> <span class="n">x_values</span></div>
+
+
+<div class="viewcode-block" id="PlotData"><a class="viewcode-back" href="../../AquaponicsModeler.html#AquaponicsModeler.plotdata.PlotData">[docs]</a><span class="k">class</span> <span class="nc">PlotData</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;PlotData contains data necessary to create plots from a model run.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataSeries</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Init the Plot Data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            dataSeries (list): A list of DataSeries items for this plot.</span>
+<span class="sd">            description (string): A description to display below the plot.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataSeries</span> <span class="o">=</span> <span class="n">dataSeries</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Dolf Andringa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

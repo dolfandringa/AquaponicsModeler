@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to Aquaponics Modeler’s documentation! &mdash; AquaponicsModeler 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="AquaponicsModeler 0.1 documentation" href="#" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-aquaponics-modeler-s-documentation">
+<h1>Welcome to Aquaponics Modeler&#8217;s documentation!<a class="headerlink" href="#welcome-to-aquaponics-modeler-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+<div class="section" id="building-the-model">
+<h2>Building the model<a class="headerlink" href="#building-the-model" title="Permalink to this headline">¶</a></h2>
+<p>In the modeler, rows of model components can be combined into a fully working
+model. The rows of model components should be specified in the order in which
+they are present in the actual setup. So for instance if a pump is pumping
+water into a water tank, you need to have the <code class="xref py py-class docutils literal"><span class="pre">Pump</span></code> in the
+first row and the <code class="xref py py-class docutils literal"><span class="pre">Container</span></code> in the second row.</p>
+<p>When adding a row, you first need to choose the type of component for that row.
+After you did, the parameters for that row need to be specified. If all rows
+have been added and their parameters filled in, you can click the &#8220;Run Model&#8221;
+button to get the resulting graphs showing the state of all components over
+time.</p>
+<img alt="_images/mainwindow.png" src="_images/mainwindow.png" />
+<div class="section" id="components">
+<h3>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
+<p>The <a class="reference internal" href="AquaponicsModeler.html#module-AquaponicsModeler.model" title="AquaponicsModeler.model"><code class="xref py py-mod docutils literal"><span class="pre">AquaponicsModeler.model</span></code></a> module contains all components to be used in
+models.</p>
+<p>All model components are classes that should inherit from
+<a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.BaseModelClass" title="AquaponicsModeler.model.BaseModelClass"><code class="xref py py-class docutils literal"><span class="pre">BaseModelClass</span></code></a>. So far there are two groups of component types:
+containers and pumps.</p>
+<p><a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Container" title="AquaponicsModeler.model.Container"><code class="xref py py-class docutils literal"><span class="pre">Containers</span></code></a> are compents that contain water and have water
+flowing in or out. They need to have another component before them in the
+model, so water can flow from one container to the other.</p>
+<p>As <a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Container" title="AquaponicsModeler.model.Container"><code class="xref py py-class docutils literal"><span class="pre">Containers</span></code></a> always need a source of water, the first
+component in the model is a <a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Pump" title="AquaponicsModeler.model.Pump"><code class="xref py py-class docutils literal"><span class="pre">Pump</span></code></a>. There are several types of pumps,
+but they all assume an infinite water source that they can pump from, and they
+pump into a <a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Container" title="AquaponicsModeler.model.Container"><code class="xref py py-class docutils literal"><span class="pre">Container</span></code></a>.</p>
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">Container</code><span class="sig-paren">(</span><em>previous</em>, <em>outflow</em>, <em>threshold</em>, <em>start_content=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#Container"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>A container in the aquaponics loop.</p>
+<p>Each container is a container/tank/basin/growbed/etc containing a volume
+of water, with possibly water flowing out into the next component and
+flowing into it from the previous container in the loop.
+The inflow speed of each container is determined by the outflow speed of
+the previous container. The outflow of each container only starts when in
+the treshold has been reached, and only if the contents of the
+container &gt; 0 liters.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>previous</strong> (<a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Container" title="AquaponicsModeler.model.Container"><em>Container</em></a>) &#8211; The previous Container in the chain.</li>
+<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The outflow speed of this container.</li>
+<li><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The threshold contents after which the container
+outflow speed starts.</li>
+<li><strong>start_content</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The starting contents of the container.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">FloodDrainContainer</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#FloodDrainContainer"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>This <a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Container" title="AquaponicsModeler.model.Container"><code class="xref py py-class docutils literal"><span class="pre">Container</span></code></a> will drain fully when the threshold has been
+reached.</p>
+<p>In other respects it works like other <a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Container" title="AquaponicsModeler.model.Container"><code class="xref py py-class docutils literal"><span class="pre">Containers</span></code></a> but
+for the way it drains. A container with a U-siphon or bell siphon at the
+end will only start draining when the waterlevel has reached a maximum.
+When that happens, suction makes sure that all water is drained from the
+container at the speed specified in outflow.</p>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">Pump</code><span class="sig-paren">(</span><em>outflow</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#Pump"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>A general Pump object.</p>
+<p>It pumps water into the system (from an unlimited source) and has a
+constant outflow speed. It doesn&#8217;t have contents (unlike containers for
+instance). The state attribute contains the on (1) or off (0) state
+of the pump, which is also what is plotted in the resulting graphs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the pump pumps.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">TimedPump</code><span class="sig-paren">(</span><em>ontime</em>, <em>offtime</em>, <em>outflow</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#TimedPump"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>A pump like the Pump object.</p>
+<p>This pump has timing parameters which periodically switch it on and off.
+This way the outflow speed of the pump is controlled. If it is on, it
+equals the outflow speed parameter, else it is 0.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ontime</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The time in minutes the pump spends pumping.</li>
+<li><strong>offtime</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The time in minutes the pump is off.</li>
+<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the pump pumps in L/min.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">Timed555Pump</code><span class="sig-paren">(</span><em>r1</em>, <em>r2</em>, <em>c</em>, <em>outflow</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#Timed555Pump"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>A pump like the <a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.TimedPump" title="AquaponicsModeler.model.TimedPump"><code class="xref py py-class docutils literal"><span class="pre">TimedPump</span></code></a> object.</p>
+<p>This pump gets resistor and capacitor values as input parameters instead of
+the actual ontime and offtime. This object assumes a 555 timer circtui in
+a-stable mode is used to switch the pump on and off.
+The resistor values of the timer determine the on and off time.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>r1</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The value in Ohm of resistor 1 for the 555 timer.</li>
+<li><strong>r2</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The value in Ohm of resistor 2 for the 555 timer.</li>
+<li><strong>c</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The value of the capacitor in uF for the 555 timer</li>
+<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the pump pumps in L/min.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="the-plot-window">
+<h2>The Plot Window<a class="headerlink" href="#the-plot-window" title="Permalink to this headline">¶</a></h2>
+<p>After pressing the Run Model button, the plot window will show up with the resulting plots.
+Currently there are only two groups of model components: Containers and Pump. Containers have L
+as the state variable, which stores the current water content of the container. Pumps have the
+on/off state of the pump in the state variable with 1=on and 0=off. These are the two variables
+that are plotted in the plots.</p>
+<img alt="_images/plotwindow.png" src="_images/plotwindow.png" />
+<p>To the right the plot history is shown, where you can see previous model runs including the model
+parameters. You can also zoom and pan in the graph by clicking the tool and in the plot holding the
+left mouse button while dragging for panning, and the right mouse button while dragging for zooming.
+The image of the plots can be saved with the save button.</p>
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to Aquaponics Modeler&#8217;s documentation!</a><ul>
+<li><a class="reference internal" href="#building-the-model">Building the model</a><ul>
+<li><a class="reference internal" href="#components">Components</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#the-plot-window">The Plot Window</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Dolf Andringa.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/index.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
