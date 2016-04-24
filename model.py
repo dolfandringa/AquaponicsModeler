@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-This module contains all components to be used in models.
+The :mod:`AquaponicsModeler.model` module contains all components to be used in
+models.
 
-All model component classes should inherit from :class:`BaseModelClass`.
-So far there are two types of components: containers and pumps.
+All model components are classes that should inherit from
+:class:`BaseModelClass`. So far there are two groups of component types:
+containers and pumps.
 
 :class:`Containers <Container>` are compents that contain water and have water
 flowing in or out. They need to have another component before them in the
@@ -18,8 +20,6 @@ pump into a :class:`Container`.
 import logging
 import collections
 import copy
-import sys
-sys.path.append("/home/dolf/Documents/Projects/Software ontwikkeling/")
 from PyElectronics.timers import AStable555
 log = logging.getLogger("aquaponics.model")
 
@@ -51,7 +51,6 @@ class BaseModelClass(object):
     _PARAMS = collections.OrderedDict()
 
     def __init__(self):
-        """Init the model instance."""
         self.state = None
 
     def __str__(self):
@@ -73,7 +72,7 @@ class BaseModelClass(object):
         Return the model parameters.
 
         Returns:
-            collection.OrderedDict: The parameters for this class.
+            collections.OrderedDict: The parameters for this class.
         """
         log.debug('Getting parameters for class %s: %s' % (cls, cls._PARAMS))
         return cls._PARAMS
@@ -88,12 +87,13 @@ class Container(BaseModelClass):
     """
     A container in the aquaponics loop.
 
-    Each container as a container/tank/basin/growbed/etc containing a volume
-    of water, with possibly water flowing out into the next component.
-    Each container is connected to a previous container. The inflow speed of
-    each container is determined by the outflow speed of the previous
-    container. The outflow of each container only starts when in the treshold
-    has been reached, and only if the contents of the container > 0 liters.
+    Each container is a container/tank/basin/growbed/etc containing a volume
+    of water, with possibly water flowing out into the next component and
+    flowing into it from the previous container in the loop.
+    The inflow speed of each container is determined by the outflow speed of
+    the previous container. The outflow of each container only starts when in
+    the treshold has been reached, and only if the contents of the
+    container > 0 liters.
 
     """
 
@@ -106,8 +106,6 @@ class Container(BaseModelClass):
 
     def __init__(self, previous, outflow, threshold, start_content=0):
         """
-        Init this container.
-
         Args:
             previous (Container): The previous Container in the chain.
             outflow (float): The outflow speed of this container.
@@ -140,6 +138,7 @@ class Container(BaseModelClass):
 
         This is determined by the outflow speed of the previous container.
 
+
         Returns:
             float: The current inflow speed.
 
@@ -151,7 +150,7 @@ class Container(BaseModelClass):
         Go through the next step of the simulation of this container.
 
         Args:
-            time(int): The length of the next step in seconds.
+            time (int): The length of the next step in seconds.
 
         """
         inflow = self.get_current_inflow_speed()
@@ -162,13 +161,14 @@ class Container(BaseModelClass):
 class FloodDrainContainer(Container):
 
     """
-    This :class:`Container` will drain fully when the threshold has been reached.
+    This :class:`Container` will drain fully when the threshold has been
+    reached.
 
     In other respects it works like other :class:`Containers <Container>` but
     for the way it drains. A container with a U-siphon or bell siphon at the
     end will only start draining when the waterlevel has reached a maximum.
     When that happens, suction makes sure that all water is drained from the
-    container.
+    container at the speed specified in outflow.
 
     """
 
@@ -182,6 +182,9 @@ class FloodDrainContainer(Container):
 
         Outflow starts when self.threshold has been reached and will continue
         at self.outflow speed until the container is empty.
+
+        Returns:
+            float: The outflow speed of this :class:`Container`
 
         """
         if (self.flooding is True and self.state > 0)\
@@ -199,9 +202,9 @@ class Pump(BaseModelClass):
     A general Pump object.
 
     It pumps water into the system (from an unlimited source) and has a
-    constant outflow speed. It doesn't have contents (lunike containers for
-    instance). The self.state attribute contains the on (1) or off (0) state
-    of the pump.
+    constant outflow speed. It doesn't have contents (unlike containers for
+    instance). The state attribute contains the on (1) or off (0) state
+    of the pump, which is also what is plotted in the resulting graphs.
 
     """
 
@@ -211,8 +214,6 @@ class Pump(BaseModelClass):
 
     def __init__(self, outflow):
         """
-        Init the Pump.
-
         Args:
             outflow (float): The speed at which the pump pumps.
 
@@ -238,8 +239,11 @@ class Pump(BaseModelClass):
             time (int): The time in seconds for which the pump state should be
                 returned.
 
+        Returns:
+            int: The state of the pump. 1=on 0=off.
+
         """
-        return
+        return self.state
 
 
 class TimedPump(Pump):
@@ -248,6 +252,8 @@ class TimedPump(Pump):
     A pump like the Pump object.
 
     This pump has timing parameters which periodically switch it on and off.
+    This way the outflow speed of the pump is controlled. If it is on, it
+    equals the outflow speed parameter, else it is 0.
 
     """
 
@@ -257,12 +263,10 @@ class TimedPump(Pump):
 
     def __init__(self, ontime, offtime, outflow):
         """
-        Init the TimedPump.
-
         Args:
-            ontime (int): The time period in minutes the pump spends pumping.
-            offtime (int): The time period in minutes the pump is off.
-            outflow (foat): The speed at which the pump pumps in L/min.
+            ontime (float): The time in minutes the pump spends pumping.
+            offtime (float): The time in minutes the pump is off.
+            outflow (float): The speed at which the pump pumps in L/min.
 
         """
         self.ontime = ontime * 60
@@ -319,7 +323,7 @@ class TimedPump(Pump):
 class Timed555Pump(TimedPump):
 
     """
-    A pump like the L{model.TimedPump} object.
+    A pump like the :class:`TimedPump` object.
 
     This pump gets resistor and capacitor values as input parameters instead of
     the actual ontime and offtime. This object assumes a 555 timer circtui in
@@ -335,10 +339,8 @@ class Timed555Pump(TimedPump):
 
     def __init__(self, r1, r2, c, outflow):
         """
-        Init the TimedPump.
 
         Args:
-
             r1 (int): The value in Ohm of resistor 1 for the 555 timer.
             r2 (int): The value in Ohm of resistor 2 for the 555 timer.
             c (int): The value of the capacitor in uF for the 555 timer
@@ -370,5 +372,5 @@ def get_components():
     """
     return [Container,  FloodDrainContainer,  Pump,  TimedPump,  Timed555Pump]
 
-__all__ = [BaseModelClass,  Container,  FloodDrainContainer,  Pump,  TimedPump,
-           Timed555Pump, get_components,  _PARAM_TYPES]
+__all__ = ['BaseModelClass', 'Container', 'FloodDrainContainer', 'Pump',
+           'TimedPump', 'Timed555Pump', 'get_components', '_PARAM_TYPES']

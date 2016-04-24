@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-# Aquaponics Modeler documentation build configuration file, created by
-# sphinx-quickstart on Sat Apr 23 16:19:26 2016.
+# AquaponicsModeler documentation build configuration file, created by
+# sphinx-quickstart on Sun Apr 24 10:55:20 2016.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -14,11 +14,12 @@
 
 import sys
 import os
-sys.path.insert(0, os.path.abspath('../../'))
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 # sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../../'))
 
 # -- General configuration ------------------------------------------------
 
@@ -31,12 +32,16 @@ sys.path.insert(0, os.path.abspath('../../'))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.todo',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
+    'sphinxcontrib.napoleon',
 ]
 
+autoclass_content = 'both'
+
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ['templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -50,7 +55,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Aquaponics Modeler'
+project = u'AquaponicsModeler'
 copyright = u'2016, Dolf Andringa'
 author = u'Dolf Andringa'
 
@@ -106,7 +111,7 @@ pygments_style = 'sphinx'
 # keep_warnings = False
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = False
+todo_include_todos = True
 
 
 # -- Options for HTML output ----------------------------------------------
@@ -125,7 +130,7 @@ html_theme = 'alabaster'
 
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
-# html_title = u'Aquaponics Modeler v0.1'
+# html_title = u'AquaponicsModeler v0.1'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 # html_short_title = None
@@ -135,14 +140,14 @@ html_theme = 'alabaster'
 # html_logo = None
 
 # The name of an image file (relative to this directory) to use as a favicon of
-# the docs.  This file should be a Windows icon file being 16x16 or 32x32
-# pixels large.
+# the docs.  This file should be a Windows icon file (.ico) being 16x16 or
+# 32x32 pixels large.
 # html_favicon = None
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -229,7 +234,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'AquaponicsModeler.tex', u'Aquaponics Modeler Documentation',
+    (master_doc, 'AquaponicsModeler.tex', u'AquaponicsModeler Documentation',
      u'Dolf Andringa', 'manual'),
 ]
 
@@ -259,7 +264,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'aquaponicsmodeler', u'Aquaponics Modeler Documentation',
+    (master_doc, 'aquaponicsmodeler', u'AquaponicsModeler Documentation',
      [author], 1)
 ]
 
@@ -273,7 +278,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'AquaponicsModeler', u'Aquaponics Modeler Documentation',
+    (master_doc, 'AquaponicsModeler', u'AquaponicsModeler Documentation',
      author, 'AquaponicsModeler', 'One line description of project.',
      'Miscellaneous'),
 ]

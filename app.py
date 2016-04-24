@@ -5,10 +5,10 @@ from PyQt5 import QtWidgets,  QtCore
 from PyQt5.Qt import QRect
 import sys
 import logging
-from . import interface
-from . import model
-from .plotcanvas import PlotWindow
-from .plotdata import DataSeries,  DataItem,  PlotData
+import interface
+import model
+from plotcanvas import PlotWindow
+from plotdata import DataSeries,  DataItem,  PlotData
 
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
@@ -19,18 +19,18 @@ def run_model(chain,  timestep, runtime,  log):
     Run the actual model and return the data series.
 
     Args:
-        timestep (integer): The time steps (seconds) for the model.
+        timestep (int): The time steps (seconds) for the model
             Minimum is 1 second, max is 3600s (1 hour)
-        runtime (integer): The total time (hours) the model should run for.
-            Minimum is 1 hour, maximum is 23 hours.
-        chain (list): A list of :class:`model.BaseModelClass`) containing the
-            chain model, which should contain objects inheriting from
-            :class:`model.BaseModelClass`.
-        log (logging.Logger): The logger to use for logging.
+        runtime (int): The total time (hours) the model should run for
+            Minimum is 1 hour, maximum is 23 hours
+        chain (list): A list of model in the order they are
+            connected in the model. The componets should be instances of
+            classes inheriting from :class:`<model.BaseModelCompontent>`
+        log (logging.Logger): The logger to use for logging
 
     Returns:
-        list: A list with an item for the time series plus an item for
-            each model component in <chain>, with the data series for that
+        list: A list with an item for the time axis plus an item for
+            each model component in chain, with the data series for that
             component.
 
     """
@@ -48,19 +48,19 @@ def run_model(chain,  timestep, runtime,  log):
     return results
 
 
-def get_parameter_widget(name,  type):
+def get_parameter_widget(name, type):
     """
     Map a tuple with model parameter type information into a QtWidget set.
 
     Args:
-        name (string): The name of the parameter.
+        name (str): The name of the parameter
         type (tuple): A tuple with parameter information. The first item is
             always the the second is the label to display and subsequent items
-            might be needed to create the widget.
+            might be needed to create the widget
 
     Returns:
-        list: A list with :class:`QtWidgets.QtWidget` for all widgets for this
-            parameter.
+        list: A list with :class:`QtWidgets.QtWidget` for all widgets for
+        this parameter.
 
     """
 
@@ -99,7 +99,14 @@ class AquaponicsModeler(QtWidgets.QMainWindow,  interface.Ui_MainWindow):
     """The graphical interface to the aquaponics modeler."""
 
     def __init__(self, log,   parent=None):
-        """Instantiate the application."""
+        """
+        Instantiate the application.
+
+        Args:
+            log (logging.Logger): The logger to send log messages to.
+            parent (PyQt5.Qt.QWidget): The parent widget.
+
+        """
         super(AquaponicsModeler,  self).__init__(parent)
         self.log = log
         self.setupUi(self)
@@ -110,14 +117,31 @@ class AquaponicsModeler(QtWidgets.QMainWindow,  interface.Ui_MainWindow):
         self.plotWindow.setGeometry(QRect(0, 0, 600, 400))
 
     def showErrorMessage(self,  message):
-        """Popup a message box with an error message."""
+        """
+        Popup a message box with an error message.
+
+        Args:
+            message (str): The message to display.
+
+        """
         msgbx = QtWidgets.QMessageBox()
         msgbx.setText(message)
         msgbx.setIcon(QtWidgets.QMessageBox.Critical)
         msgbx.exec_()
 
     def plotResults(self,  results,  chain):
-        """Plot the results of a model run with matplotlib."""
+        """
+        Plot the results of a model run with matplotlib.
+
+            results (list): A list of lists. The first item is the x-axis
+                (time component). Subsequent items are series for each model
+                component in the order in which they are in the chain. Each of
+                these lists contains the state values of the component for each
+                step through the model.
+            chain (list): The model chain, which is a list of instances
+                inheriting from :class:`model.BaseModelClass`.
+
+        """
         x = [r / 60 for r in results[0]]
         pumpSeries = DataSeries(x_title='Time (min)',
                                 y_title='State (on/off)',

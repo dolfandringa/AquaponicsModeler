@@ -1,7 +1,7 @@
-aquaponics_modeler
-==================
+AquaponicsModeler
+=================
 
 .. toctree::
    :maxdepth: 4
 
-   aquaponics_modeler
+   AquaponicsModeler
