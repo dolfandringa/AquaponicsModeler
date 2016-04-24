@@ -10,7 +10,7 @@ setup(name='AquaponicsModeler',
       author_email='dolfandringa@gmail.com',
       url='http://allican.be/AquaponicsModeler',
       packages=['AquaponicsModeler'],
-      install_requires=['PyElectronics', 'PyQt5', 'matplotlib'],
+      install_requires=['PyElectronics', 'matplotlib'],
       dependency_links=[
         'https://github.com/dolfandringa/PyElectronics/archive/master.zip'+
           '#egg=PyElectronics-1.0'
