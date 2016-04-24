@@ -5,10 +5,10 @@ from PyQt5 import QtWidgets,  QtCore
 from PyQt5.Qt import QRect
 import sys
 import logging
-import interface
-import model
-from plotcanvas import PlotWindow
-from plotdata import DataSeries,  DataItem,  PlotData
+from AquaponicsModeler import interface
+from AquaponicsModeler import model
+from AquaponicsModeler.plotcanvas import PlotWindow
+from AquaponicsModeler.plotdata import DataSeries,  DataItem,  PlotData
 
 
 logging.basicConfig(level=logging.INFO, stream=sys.stdout)
