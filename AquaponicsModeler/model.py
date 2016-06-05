@@ -333,8 +333,8 @@ class Timed555Pump(TimedPump):
     """
 
     _PARAMS = copy.deepcopy(Pump._PARAMS)
-    _PARAMS['r1'] = (_PARAM_TYPES.FLOAT, 'Resistor 1 value (Ohm)')
-    _PARAMS['r2'] = (_PARAM_TYPES.FLOAT, 'Resistor 2 value (Ohm)')
+    _PARAMS['r1'] = (_PARAM_TYPES.FLOAT, 'Resistor 1 value (KOhm)')
+    _PARAMS['r2'] = (_PARAM_TYPES.FLOAT, 'Resistor 2 value (KOhm)')
     _PARAMS['c'] = (_PARAM_TYPES.INTEGER, 'The capacitor value (uF)')
 
     def __init__(self, r1, r2, c, outflow):

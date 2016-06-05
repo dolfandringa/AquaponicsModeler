@@ -71,7 +71,7 @@ def get_parameter_widget(name, type):
         label.setText(type[1])
         label.setObjectName('lab_%s' % name)
         widget = QtWidgets.QSpinBox()
-        widget.setMaximum(99999)
+        widget.setMaximum(9999999)
         widget.setObjectName('w_%s' % name)
         label.setBuddy(widget)
         return [label,  widget]
@@ -80,7 +80,7 @@ def get_parameter_widget(name, type):
         label.setText(type[1])
         label.setObjectName('lab_%s' % name)
         widget = QtWidgets.QDoubleSpinBox()
-        widget.setMaximum(99999)
+        widget.setMaximum(9999999)
         widget.setObjectName('w_%s' % name)
         label.setBuddy(widget)
         return [label,  widget]

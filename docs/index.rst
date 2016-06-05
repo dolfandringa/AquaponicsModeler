@@ -19,6 +19,8 @@ If possible, download and install the binary version as that is the easiest.
 Download the latest version of AquaponicsModeler from https://github.com/dolfandringa/AquaponicsModeler/archive/master.zip
 and then run `pip install master.zip`. This will install the application and all other dependencies.
 
+After installation you should be able to run aquaponicsmodeler(.exe) to run the application.
+
 ------------------
 Building the model
 ------------------
