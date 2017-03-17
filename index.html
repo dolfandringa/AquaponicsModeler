@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Welcome to Aquaponics Modeler’s documentation! &mdash; AquaponicsModeler 0.1 documentation</title>
+    <title>Welcome to Aquaponics Modeler’s documentation! &#8212; AquaponicsModeler 1.0 documentation</title>
     
     <link rel="stylesheet" href="_static/nature.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,16 +14,18 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.1',
+        VERSION:     '1.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
       };
     </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="AquaponicsModeler 0.1 documentation" href="#" /> 
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
   </head>
   <body role="document">
     <div class="related" role="navigation" aria-label="related navigation">
@@ -35,7 +37,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">AquaponicsModeler 0.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">AquaponicsModeler 1.0 documentation</a> &#187;</li> 
       </ul>
     </div>  
 
@@ -47,8 +49,6 @@
   <div class="section" id="welcome-to-aquaponics-modeler-s-documentation">
 <h1>Welcome to Aquaponics Modeler&#8217;s documentation!<a class="headerlink" href="#welcome-to-aquaponics-modeler-s-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-<ul class="simple">
-</ul>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
@@ -57,6 +57,7 @@ as one of the regular dependencies, so you&#8217;ll have to download it from <a 
 If possible, download and install the binary version as that is the easiest.</p>
 <p>Download the latest version of AquaponicsModeler from <a class="reference external" href="https://github.com/dolfandringa/AquaponicsModeler/archive/master.zip">https://github.com/dolfandringa/AquaponicsModeler/archive/master.zip</a>
 and then run <cite>pip install master.zip</cite>. This will install the application and all other dependencies.</p>
+<p>After installation you should be able to run aquaponicsmodeler(.exe) to run the application.</p>
 </div>
 <div class="section" id="building-the-model">
 <h2>Building the model<a class="headerlink" href="#building-the-model" title="Permalink to this headline">¶</a></h2>
@@ -87,7 +88,7 @@ but they all assume an infinite water source that they can pump from, and they
 pump into a <a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Container" title="AquaponicsModeler.model.Container"><code class="xref py py-class docutils literal"><span class="pre">Container</span></code></a>.</p>
 <dl class="class">
 <dt>
-<em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">Container</code><span class="sig-paren">(</span><em>previous</em>, <em>outflow</em>, <em>threshold</em>, <em>start_content=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#Container"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">SimpleContainer</code><span class="sig-paren">(</span><em>previous</em>, <em>outflow</em>, <em>start_content=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#SimpleContainer"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>A container in the aquaponics loop.</p>
 <p>Each container is a container/tank/basin/growbed/etc containing a volume
 of water, with possibly water flowing out into the next component and
@@ -102,10 +103,30 @@ container &gt; 0 liters.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>previous</strong> (<a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Container" title="AquaponicsModeler.model.Container"><em>Container</em></a>) &#8211; The previous Container in the chain.</li>
-<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The outflow speed of this container.</li>
-<li><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The threshold contents after which the container
+<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The outflow speed of this container.</li>
+<li><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The threshold contents after which the container
 outflow speed starts.</li>
-<li><strong>start_content</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The starting contents of the container.</li>
+<li><strong>start_content</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The starting contents of the container.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">Container</code><span class="sig-paren">(</span><em>previous</em>, <em>outflow</em>, <em>threshold</em>, <em>start_content=0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#Container"><span class="viewcode-link">[source]</span></a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>previous</strong> (<a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.Container" title="AquaponicsModeler.model.Container"><em>Container</em></a>) &#8211; The previous Container in the chain.</li>
+<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The outflow speed of this container.</li>
+<li><strong>threshold</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The threshold contents after which the container
+outflow speed starts.</li>
+<li><strong>start_content</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The starting contents of the container.</li>
 </ul>
 </td>
 </tr>
@@ -137,7 +158,23 @@ of the pump, which is also what is plotted in the resulting graphs.</p>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the pump pumps.</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the pump pumps.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt>
+<em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">WaterSource</code><span class="sig-paren">(</span><em>outflow</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#WaterSource"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>A general Water Source object.</p>
+<p>Water flows at a static speed from a source (spring or other source).
+It doesn&#8217;t have contents (unlike containers for instance).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the watersource flows.</td>
 </tr>
 </tbody>
 </table>
@@ -155,9 +192,9 @@ equals the outflow speed parameter, else it is 0.</p>
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>ontime</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The time in minutes the pump spends pumping.</li>
-<li><strong>offtime</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The time in minutes the pump is off.</li>
-<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the pump pumps in L/min.</li>
+<li><strong>ontime</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The time in minutes the pump spends pumping.</li>
+<li><strong>offtime</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The time in minutes the pump is off.</li>
+<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the pump pumps in L/min.</li>
 </ul>
 </td>
 </tr>
@@ -170,18 +207,19 @@ equals the outflow speed parameter, else it is 0.</p>
 <em class="property">class </em><code class="descclassname">AquaponicsModeler.model.</code><code class="descname">Timed555Pump</code><span class="sig-paren">(</span><em>r1</em>, <em>r2</em>, <em>c</em>, <em>outflow</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/AquaponicsModeler/model.html#Timed555Pump"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>A pump like the <a class="reference internal" href="AquaponicsModeler.html#AquaponicsModeler.model.TimedPump" title="AquaponicsModeler.model.TimedPump"><code class="xref py py-class docutils literal"><span class="pre">TimedPump</span></code></a> object.</p>
 <p>This pump gets resistor and capacitor values as input parameters instead of
-the actual ontime and offtime. This object assumes a 555 timer circtui in
-a-stable mode is used to switch the pump on and off.
+the actual ontime and offtime. This object assumes a 555 timer circuit in
+a-stable mode is used to switch the pump on and off. A relay is used for
+the actual switching which is on when the timer is high.
 The resistor values of the timer determine the on and off time.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>r1</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The value in Ohm of resistor 1 for the 555 timer.</li>
-<li><strong>r2</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The value in Ohm of resistor 2 for the 555 timer.</li>
-<li><strong>c</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The value of the capacitor in uF for the 555 timer</li>
-<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the pump pumps in L/min.</li>
+<li><strong>r1</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The value in Ohm of resistor 1 for the 555 timer.</li>
+<li><strong>r2</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The value in Ohm of resistor 2 for the 555 timer.</li>
+<li><strong>c</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The value of the capacitor in uF for the 555 timer</li>
+<li><strong>outflow</strong> (<a class="reference external" href="https://docs.python.org/2/library/functions.html#float" title="(in Python v2.7)"><em>float</em></a>) &#8211; The speed at which the pump pumps in L/min.</li>
 </ul>
 </td>
 </tr>
@@ -237,15 +275,15 @@ The image of the plots can be saved with the save button.</p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/index.txt"
+      <li><a href="_sources/index.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
@@ -264,12 +302,12 @@ The image of the plots can be saved with the save button.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">AquaponicsModeler 0.1 documentation</a> &raquo;</li> 
+        <li class="nav-item nav-item-0"><a href="#">AquaponicsModeler 1.0 documentation</a> &#187;</li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-        &copy; Copyright 2016, Dolf Andringa.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.1.
+        &#169; Copyright 2017, Dolf Andringa.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.5.3.
     </div>
   </body>
 </html>
