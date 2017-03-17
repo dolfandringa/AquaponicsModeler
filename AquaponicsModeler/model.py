@@ -81,8 +81,7 @@ class BaseModelClass(object):
         """Step into the next iteration of the model."""
         raise NotImplementedError("Please implement a step instance method")
 
-
-class Container(BaseModelClass):
+class SimpleContainer(BaseModelClass):
 
     """
     A container in the aquaponics loop.
@@ -100,9 +99,61 @@ class Container(BaseModelClass):
     _PARAMS = {
         'previous': (_PARAM_TYPES.MODEL, 'previous'),
         'outflow': (_PARAM_TYPES.FLOAT, 'outflow (l/min)'),
-        'threshold': (_PARAM_TYPES.INTEGER,  'dump threshold (l)'),
         'start_content': (_PARAM_TYPES.INTEGER, 'start content (l)')
     }
+
+    def __init__(self, previous, outflow, start_content=0):
+        """
+        Args:
+            previous (Container): The previous Container in the chain.
+            outflow (float): The outflow speed of this container.
+            threshold (int): The threshold contents after which the container
+                outflow speed starts.
+            start_content (int): The starting contents of the container.
+
+        """
+        self.previous = previous
+        self.outflow = outflow
+        self.state = self.start_content = start_content
+
+    def get_current_outflow_speed(self):
+        """
+        Determine the current flow speed of water from this container.
+
+        Returns:
+            float: The current outflow speed.
+
+        """
+        return self.outflow
+
+    def get_current_inflow_speed(self):
+        """
+        Determine the current speed of water flowing into this container.
+
+        This is determined by the outflow speed of the previous container.
+
+
+        Returns:
+            float: The current inflow speed.
+
+        """
+        return self.previous.get_current_outflow_speed()
+
+    def step(self, time=10):
+        """
+        Go through the next step of the simulation of this container.
+
+        Args:
+            time (int): The length of the next step in seconds.
+
+        """
+        inflow = self.get_current_inflow_speed()
+        outflow = self.get_current_outflow_speed()
+        self.state += time / 60 * inflow - time / 60 * outflow
+
+class Container(SimpleContainer):
+    _PARAMS = copy.deepcopy(SimpleContainer._PARAMS)
+    _PARAMS['threshold']= (_PARAM_TYPES.INTEGER,  'dump threshold (l)')
 
     def __init__(self, previous, outflow, threshold, start_content=0):
         """
@@ -131,32 +182,6 @@ class Container(BaseModelClass):
             return self.outflow
         else:
             return 0
-
-    def get_current_inflow_speed(self):
-        """
-        Determine the current speed of water flowing into this container.
-
-        This is determined by the outflow speed of the previous container.
-
-
-        Returns:
-            float: The current inflow speed.
-
-        """
-        return self.previous.get_current_outflow_speed()
-
-    def step(self, time=10):
-        """
-        Go through the next step of the simulation of this container.
-
-        Args:
-            time (int): The length of the next step in seconds.
-
-        """
-        inflow = self.get_current_inflow_speed()
-        outflow = self.get_current_outflow_speed()
-        self.state += time / 60 * inflow - time / 60 * outflow
-
 
 class FloodDrainContainer(Container):
 
@@ -245,6 +270,50 @@ class Pump(BaseModelClass):
         """
         return self.state
 
+class WaterSource(BaseModelClass):
+
+    """
+    A general Water Source object.
+
+    Water flows at a static speed from a source (spring or other source).
+    It doesn't have contents (unlike containers for instance).
+
+    """
+
+    _PARAMS = {
+        'outflow': (_PARAM_TYPES.FLOAT, 'outflow (l/min)'),
+    }
+
+    def __init__(self, outflow):
+        """
+        Args:
+            outflow (float): The speed at which the watersource flows.
+
+        """
+        self.outflow = outflow
+        self.state = None
+
+    def get_current_outflow_speed(self):
+        """
+        Return the pump speed of this pump.
+
+        Returns:
+            float: The outflow speed of this source in L/min.
+
+        """
+        return self.outflow
+
+    def step(self, time=10):
+        """
+        Go through the next step of the source.
+
+        Args:
+            time (int): The time in seconds for which the pump state should be
+                returned.
+
+        """
+        return
+
 
 class TimedPump(Pump):
 
@@ -326,10 +395,50 @@ class Timed555Pump(TimedPump):
     A pump like the :class:`TimedPump` object.
 
     This pump gets resistor and capacitor values as input parameters instead of
-    the actual ontime and offtime. This object assumes a 555 timer circtui in
-    a-stable mode is used to switch the pump on and off.
+    the actual ontime and offtime. This object assumes a 555 timer circuit in
+    a-stable mode is used to switch the pump on and off. A relay is used for
+    the actual switching which is on when the timer is high.
     The resistor values of the timer determine the on and off time.
 
+    """
+
+    _PARAMS = copy.deepcopy(Pump._PARAMS)
+    _PARAMS['r1'] = (_PARAM_TYPES.FLOAT, 'Resistor 1 value (KOhm)')
+    _PARAMS['r2'] = (_PARAM_TYPES.FLOAT, 'Resistor 2 value (KOhm)')
+    _PARAMS['c'] = (_PARAM_TYPES.INTEGER, 'The capacitor value (uF)')
+
+    def __init__(self, r1, r2, c, outflow):
+        """
+
+        Args:
+            r1 (int): The value in Ohm of resistor 1 for the 555 timer.
+            r2 (int): The value in Ohm of resistor 2 for the 555 timer.
+            c (int): The value of the capacitor in uF for the 555 timer
+            outflow (float): The speed at which the pump pumps in L/min.
+
+        """
+
+        self.c = c
+        self.r1 = r1
+        self.r2 = r2
+        ontime = AStable555.timeHigh(r1, r2, c)
+        offtime = AStable555.timeLow(r2, c)
+        log.debug("Got ontime %i" % ontime)
+        log.debug("Got offtime %i" % offtime)
+        self.ontime = ontime
+        self.offtime = offtime
+        self.outflow = outflow
+        self.time_since_switch = 0
+        self.state = 1
+
+
+class InvTimed555Pump(TimedPump):
+
+    """
+    An inverted version of the :class:`Timed555Pump` object.
+
+    It works very similar, but the relay is inverted. The normally-off side
+    of the relay is used to switch the pump off when the timer is high.
     """
 
     _PARAMS = copy.deepcopy(Pump._PARAMS)
@@ -370,7 +479,9 @@ def get_components():
         list: Return a list of all component classes.
 
     """
-    return [Container,  FloodDrainContainer,  Pump,  TimedPump,  Timed555Pump]
+    return [Container,  FloodDrainContainer,  Pump,  TimedPump,  Timed555Pump,
+            InvTimed555Pump, WaterSource, SimpleContainer]
 
 __all__ = ['BaseModelClass', 'Container', 'FloodDrainContainer', 'Pump',
-           'TimedPump', 'Timed555Pump', 'get_components', '_PARAM_TYPES']
+           'TimedPump', 'Timed555Pump', 'InvTimed555Pump', 'WaterSource',
+           'SimpleContainer', 'get_components', '_PARAM_TYPES']

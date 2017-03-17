@@ -155,7 +155,7 @@ class AquaponicsModeler(QtWidgets.QMainWindow,  interface.Ui_MainWindow):
         names = []
         for i, c in enumerate(chain):
             params = c.__class__.getParameters()
-            paramValues = [(k, str(getattr(c, k))) for k in params.keys()]
+            paramValues = [(v[1], str(getattr(c, k))) for k,v in params.items()]
             num = 1
             name = "%s%i" % (c, num)
             while name in names:
@@ -169,13 +169,21 @@ class AquaponicsModeler(QtWidgets.QMainWindow,  interface.Ui_MainWindow):
                 self.log.debug('Adding a series with %i items to pumpSeries.'
                                % len(item.values))
                 pumpSeries.dataItems.append(item)
-            elif isinstance(c, model.Container):
+            elif isinstance(c, model.SimpleContainer):
                 self.log.debug('Adding a series with %i' % len(item.values) +
                                ' items to containerSeries.')
                 containerSeries.dataItems.append(item)
             items.append(item)
-        desc = "Model components: %s" % ", ".join([i.title for i in items])
-        data = PlotData(dataSeries=[containerSeries, pumpSeries],
+        desc = "Model components: %s" % ", ".join(
+            ["%s (%s)" % (i.title, ','.join(
+                ["%s: %s" %(k, v) for k, v in i.params])) for i in items])
+        dataSeries = []
+        if(len(containerSeries.dataItems)>0):
+            dataSeries.append(containerSeries)
+        if(len(pumpSeries.dataItems)>0):
+            dataSeries.append(pumpSeries)
+
+        data = PlotData(dataSeries=dataSeries,
                         description=desc)
 
         self.plotWindow.plot(data)

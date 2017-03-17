@@ -124,11 +124,8 @@ class PlotWindow(QWidget):
 
             for i, d in enumerate(series.dataItems):
                 vals = d.values
-                params = d.params
                 numvals = len(vals)
-                paramstr = "\n    ".join(["%s: %s" % (k, v)
-                                          for k, v in params])
-                label = "%s\n    %s" % (d.title,  paramstr)
+                label = d.title
                 self.log.debug('Got %i items in series item %i' % (numvals, i))
                 item, = sp.plot(x, vals, '%s-' % colors.pop(),  label=label)
                 items.append(item)

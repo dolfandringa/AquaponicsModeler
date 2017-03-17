@@ -4,7 +4,7 @@ from setuptools import setup
 
 
 setup(name='AquaponicsModeler',
-      version='0.1',
+      version='1.0',
       description='A modelling application for aquaponics systems.',
       author='Dolf Andringa',
       author_email='dolfandringa@gmail.com',
